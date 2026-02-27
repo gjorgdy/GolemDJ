@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "golem_disc_jockey",
+  "version": "${version}",
+  "name": "GolemDJ",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/golem_disc_jockey/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "nl.gjorgdy.golem_disk_jockey.GolemDiscJockey"
+    ]
+  },
+  "mixins": [
+    "golem_disc_jockey.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
