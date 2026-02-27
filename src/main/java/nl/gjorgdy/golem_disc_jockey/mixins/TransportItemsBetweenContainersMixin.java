@@ -1,12 +1,12 @@
-package nl.gjorgdy.golem_disk_jockey.mixins;
+package nl.gjorgdy.golem_disc_jockey.mixins;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import nl.gjorgdy.golem_disk_jockey.GolemDiscJockey;
-import nl.gjorgdy.golem_disk_jockey.utils.ContainerUtils;
-import nl.gjorgdy.golem_disk_jockey.utils.ItemUtils;
-import nl.gjorgdy.golem_disk_jockey.utils.EntityUtils;
+import nl.gjorgdy.golem_disc_jockey.GolemDiscJockey;
+import nl.gjorgdy.golem_disc_jockey.utils.ContainerUtils;
+import nl.gjorgdy.golem_disc_jockey.utils.ItemUtils;
+import nl.gjorgdy.golem_disc_jockey.utils.EntityUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,7 +46,7 @@ public abstract class TransportItemsBetweenContainersMixin {
                 cir.cancel();
             }
             // If no jukebox found, don't sort discs
-            else if (!GolemDiscJockey.shouldSortDiscs && !EntityUtils.isDj(copperGolem)) {
+            else if (!GolemDiscJockey.shouldSortDiscs || EntityUtils.isDj(copperGolem)) {
                 cir.setReturnValue(Optional.empty());
                 cir.cancel();
             }

@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "nl.gjorgdy.golem_disk_jockey.mixins",
+  "package": "nl.gjorgdy.golem_disc_jockey.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "TransportItemsBetweenContainersMixin"

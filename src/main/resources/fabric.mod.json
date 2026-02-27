@@ -11,7 +11,7 @@
   "environment": "server",
   "entrypoints": {
     "main": [
-      "nl.gjorgdy.golem_disk_jockey.GolemDiscJockey"
+      "nl.gjorgdy.golem_disc_jockey.GolemDiscJockey"
     ]
   },
   "mixins": [

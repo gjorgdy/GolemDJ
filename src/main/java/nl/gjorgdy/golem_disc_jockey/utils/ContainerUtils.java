@@ -1,4 +1,4 @@
-package nl.gjorgdy.golem_disk_jockey.utils;
+package nl.gjorgdy.golem_disc_jockey.utils;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
