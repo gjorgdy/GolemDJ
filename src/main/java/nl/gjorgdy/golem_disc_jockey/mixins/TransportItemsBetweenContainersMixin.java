@@ -1,5 +1,6 @@
 package nl.gjorgdy.golem_disc_jockey.mixins;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -13,9 +14,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -70,6 +73,19 @@ public abstract class TransportItemsBetweenContainersMixin {
         cir.setReturnValue(
             cir.getReturnValue() || (this.target != null && this.target.blockEntity() instanceof JukeboxBlockEntity)
         );
+    }
+
+    @WrapMethod(method = "doReachedTargetInteraction")
+    private void onReachedTargetInteraction(PathfinderMob pathfinderMob, Container container, BiConsumer<PathfinderMob, Container> biConsumer, BiConsumer<PathfinderMob, Container> biConsumer2, BiConsumer<PathfinderMob, Container> biConsumer3, BiConsumer<PathfinderMob, Container> biConsumer4, Operation<Void> original) {
+        if ((GolemDiscJockey.shouldWaitAtJukebox || EntityUtils.isDj(pathfinderMob))
+                && target != null && target.blockEntity() instanceof JukeboxBlockEntity jukeboxBlockEntity
+                && jukeboxBlockEntity.getTheItem() != ItemStack.EMPTY
+                && pathfinderMob.level().random.nextIntBetweenInclusive(0,4) % 4 != 0
+        ) {
+            // If the target is a jukebox with a disc in it, sometimes do the interaction.
+            return;
+        }
+        original.call(pathfinderMob, container, biConsumer, biConsumer2, biConsumer3, biConsumer4);
     }
 
     @WrapOperation(method = "putDownItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/behavior/TransportItemsBetweenContainers;addItemsToContainer(Lnet/minecraft/world/entity/PathfinderMob;Lnet/minecraft/world/Container;)Lnet/minecraft/world/item/ItemStack;"))
