@@ -12,7 +12,7 @@ public class GolemDiscJockey implements ModInitializer {
     public static final String MOD_ID = "golem_disc_jockey";
     public static final Logger LOGGER = LogManager.getLogger(MOD_NAME);
 
-    public static boolean shouldSortDiscs = false;
+    public static boolean shouldSortDiscs = true;
     public static boolean shouldWaitAtJukebox = true;
 
     @Override
