@@ -2,8 +2,11 @@ package nl.gjorgdy.golem_disk_jockey.mixins;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import nl.gjorgdy.golem_disk_jockey.GolemDiscJockey;
+import nl.gjorgdy.golem_disk_jockey.utils.ContainerUtils;
 import nl.gjorgdy.golem_disk_jockey.utils.ItemUtils;
+import nl.gjorgdy.golem_disk_jockey.utils.EntityUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,19 +38,31 @@ public abstract class TransportItemsBetweenContainersMixin {
     private TransportItemsBetweenContainers.TransportItemTarget target;
 
     @Inject(method = "getTransportTarget", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"), cancellable = true)
-    public void onFindStorage(ServerLevel world, PathfinderMob entity, CallbackInfoReturnable<Optional<TransportItemsBetweenContainers.TransportItemTarget>> cir) {
-        if (entity instanceof CopperGolem copperGolem && ItemUtils.isMusicDisc(world, copperGolem.getMainHandItem())) {
+    public void onFindStorage(ServerLevel world, PathfinderMob pathfinderMob, CallbackInfoReturnable<Optional<TransportItemsBetweenContainers.TransportItemTarget>> cir) {
+        if (pathfinderMob instanceof CopperGolem copperGolem && ItemUtils.isMusicDisc(copperGolem.getMainHandItem())) {
             var optJukebox = this.findJukebox(world, copperGolem);
             if (optJukebox.isPresent()) {
                 cir.setReturnValue(optJukebox);
                 cir.cancel();
             }
             // If no jukebox found, don't sort discs
-            else if (!GolemDiscJockey.shouldSortDiscs) {
+            else if (!GolemDiscJockey.shouldSortDiscs && !EntityUtils.isDj(copperGolem)) {
                 cir.setReturnValue(Optional.empty());
                 cir.cancel();
             }
         }
+    }
+
+    @WrapOperation(method = "pickUpItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/behavior/TransportItemsBetweenContainers;pickupItemFromContainer(Lnet/minecraft/world/Container;)Lnet/minecraft/world/item/ItemStack;"))
+    private static ItemStack onPickupItem(Container container, Operation<ItemStack> original, @Local(argsOnly = true) PathfinderMob pathfinderMob) {
+        // to prevent an edge case where the golems target is still a jukebox, so it takes the disc out
+        if (container instanceof JukeboxBlockEntity) {
+            return ItemStack.EMPTY;
+        }
+        if (EntityUtils.isDj(pathfinderMob)) {
+            return ContainerUtils.pickupDiscFromContainer(container);
+        }
+        return original.call(container);
     }
 
     @Inject(method = "hasValidTarget", at = @At("TAIL"), cancellable = true)
