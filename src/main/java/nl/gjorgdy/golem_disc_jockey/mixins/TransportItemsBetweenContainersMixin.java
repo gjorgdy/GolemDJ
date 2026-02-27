@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
@@ -42,6 +41,8 @@ public abstract class TransportItemsBetweenContainersMixin {
 
     @Inject(method = "getTransportTarget", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"), cancellable = true)
     public void onFindStorage(ServerLevel world, PathfinderMob pathfinderMob, CallbackInfoReturnable<Optional<TransportItemsBetweenContainers.TransportItemTarget>> cir) {
+        var isDj = EntityUtils.isDj(pathfinderMob);
+        if (!(GolemDiscJockey.shouldUseJukebox || isDj)) return;
         if (pathfinderMob instanceof CopperGolem copperGolem && ItemUtils.isMusicDisc(copperGolem.getMainHandItem())) {
             var optJukebox = this.findJukebox(world, copperGolem);
             if (optJukebox.isPresent()) {
@@ -49,7 +50,7 @@ public abstract class TransportItemsBetweenContainersMixin {
                 cir.cancel();
             }
             // If no jukebox found, don't sort discs
-            else if (!GolemDiscJockey.shouldSortDiscs || EntityUtils.isDj(copperGolem)) {
+            else if (!GolemDiscJockey.shouldSortDiscIfNoJukebox || isDj) {
                 cir.setReturnValue(Optional.empty());
                 cir.cancel();
             }

@@ -12,8 +12,9 @@ public class GolemDiscJockey implements ModInitializer {
     public static final String MOD_ID = "golem_disc_jockey";
     public static final Logger LOGGER = LogManager.getLogger(MOD_NAME);
 
-    public static boolean shouldSortDiscs = true;
+    public static boolean shouldUseJukebox = true;
     public static boolean shouldWaitAtJukebox = true;
+    public static boolean shouldSortDiscIfNoJukebox = true;
 
     @Override
     public void onInitialize() {
@@ -23,8 +24,9 @@ public class GolemDiscJockey implements ModInitializer {
     public static void loadConfig() {
         if (FabricLoader.getInstance().isModLoaded("fzzy_config")) {
             var config = FzzyConfig.load();
-            GolemDiscJockey.shouldSortDiscs = config.shouldSortDiscs;
-            GolemDiscJockey.shouldWaitAtJukebox = config.shouldWaitAtJukebox;
+            GolemDiscJockey.shouldUseJukebox = config.useJukebox;
+            GolemDiscJockey.shouldWaitAtJukebox = config.waitAtJukebox;
+            GolemDiscJockey.shouldSortDiscIfNoJukebox = config.sortDiscIfNoJukebox;
         } else {
             LOGGER.log(Level.INFO, "Fzzy Config not found, using default settings.");
         }

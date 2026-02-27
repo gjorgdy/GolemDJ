@@ -22,10 +22,13 @@ public class FzzyConfig extends Config {
         super(Identifier.fromNamespaceAndPath(GolemDiscJockey.MOD_ID, "config"));
     }
 
-    @Comment("Whether a golem should sort a disc into a chest if it can't find a jukebox to put it in.")
-    public boolean shouldSortDiscs = GolemDiscJockey.shouldSortDiscs;
+    @Comment("Whether all golems should try to put a disc into a jukebox.")
+    public boolean useJukebox = GolemDiscJockey.shouldUseJukebox;
 
-    @Comment("Whether a golem should wait at a jukebox if it can't put the disc in.")
-    public boolean shouldWaitAtJukebox = GolemDiscJockey.shouldWaitAtJukebox;
+    @Comment("Whether all golems should wait at a jukebox if it can't put the disc in.")
+    public boolean waitAtJukebox = GolemDiscJockey.shouldWaitAtJukebox;
+
+    @Comment("Whether a golem should sort a disc into a chest if it can't find a jukebox to put it in.")
+    public boolean sortDiscIfNoJukebox = GolemDiscJockey.shouldSortDiscIfNoJukebox;
 
 }
