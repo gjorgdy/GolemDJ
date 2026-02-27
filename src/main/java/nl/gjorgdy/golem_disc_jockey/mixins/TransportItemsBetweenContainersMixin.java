@@ -111,7 +111,7 @@ public abstract class TransportItemsBetweenContainersMixin {
                 .map(chunkPos -> world.getChunkSource().getChunkNow(chunkPos.x, chunkPos.z))
                 .filter(Objects::nonNull)
                 .flatMap(worldChunk -> worldChunk.getBlockEntities().values().stream())
-                .filter(blockEntity -> blockEntity instanceof JukeboxBlockEntity jbe && (jbe.isEmpty() || GolemDiscJockey.shouldWaitAtJukebox))
+                .filter(blockEntity -> blockEntity instanceof JukeboxBlockEntity jbe && (jbe.isEmpty() || GolemDiscJockey.shouldWaitAtJukebox || EntityUtils.isDj(entity)))
                 .min(Comparator.comparingDouble(a -> a.getBlockPos().distSqr(entity.blockPosition())));
         // If found, return the storage
         if (jukebox.isPresent() && jukebox.get() instanceof JukeboxBlockEntity jukeboxBlockEntity) {
