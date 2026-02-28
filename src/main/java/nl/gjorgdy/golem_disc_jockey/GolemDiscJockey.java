@@ -18,15 +18,8 @@ public class GolemDiscJockey implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        loadConfig();
-    }
-
-    public static void loadConfig() {
         if (FabricLoader.getInstance().isModLoaded("fzzy_config")) {
-            var config = FzzyConfig.load();
-            GolemDiscJockey.shouldUseJukebox = config.useJukebox;
-            GolemDiscJockey.shouldWaitAtJukebox = config.waitAtJukebox;
-            GolemDiscJockey.shouldSortDiscIfNoJukebox = config.sortDiscIfNoJukebox;
+            FzzyConfig.load();
         } else {
             LOGGER.log(Level.INFO, "Fzzy Config not found, using default settings.");
         }
