@@ -7,7 +7,7 @@ version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 base {
-    archivesName = project.archives_base_name
+    archivesName = project.mod_name
 }
 
 
@@ -56,7 +56,7 @@ java {
 
 jar {
     from("LICENSE") {
-        rename { "${it}_${project.archives_base_name}" }
+        rename { "${it}_${project.mod_name}" }
     }
 }
 
@@ -73,7 +73,7 @@ modrinth {
     autoAddDependsOn = false
     token = getModrinthToken()
     projectId = project.mod_id
-    versionName = "${project.archives_base_name} ${version}"
+    versionName = "${project.mod_name} ${version}"
     versionNumber = "${version}"
     changelog = rootProject.file("changelog.md").text
     syncBodyFrom = rootProject.file("README.md").text
