@@ -3,7 +3,7 @@ plugins {
     id 'fabric-loom' version "${loom_version}"
 }
 
-version = project.mod_version
+version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 base {
@@ -73,8 +73,8 @@ modrinth {
     autoAddDependsOn = false
     token = getModrinthToken()
     projectId = project.mod_id
-    versionName = "${project.archives_base_name} ${project.version}"
-    versionNumber = "${project.version}"
+    versionName = "${project.archives_base_name} ${version}"
+    versionNumber = "${version}"
     changelog = rootProject.file("changelog.md").text
     syncBodyFrom = rootProject.file("README.md").text
     versionType = project.mod_release_type

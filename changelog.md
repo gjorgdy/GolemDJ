@@ -1,4 +1,7 @@
-﻿Pre-release
+﻿Initial Release
 ---
 
-- As good as ready for release, but I want to test it out a bit more before I do so.
+- Ported from [Solute](https://modrinth.com/mod/solute), it will be removed from it in a future update.
+- Added logic for golems to 'wait' at Jukeboxes.
+- Added 'DJ Golems' by naming golems.
+- Added optional config options using Fzzy Config.
