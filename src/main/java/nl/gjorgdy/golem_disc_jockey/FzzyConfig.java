@@ -12,6 +12,9 @@ public class FzzyConfig extends Config {
         ConfigApi.event().onSyncServer((a, b) -> {
             GolemDiscJockey.loadConfig();
         });
+        ConfigApi.event().onSyncClient((a, b) -> {
+            GolemDiscJockey.loadConfig();
+        });
     }
 
     public static FzzyConfig load() {
