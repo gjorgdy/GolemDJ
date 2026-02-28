@@ -1,4 +1,4 @@
-![TO REPLACE](https://cdn.modrinth.com/data/cached_images/1a17539794c717c310b9bf3e3dd8f0e4d4e9070a_0.webp)
+![A Copper Golem on a stage playing music with the text "Golem DJ" in front of it](https://cdn.modrinth.com/data/cached_images/9ca2507a54e774db12663c552446dae8b4185a9a.webp)
 
 <center>
   Is your world not quite musical enough? Let the golems play you your favourite songs.
@@ -25,6 +25,8 @@ If a Copper Golem has the word "DJ" in its name, it will _only_ pick-up music di
 
 On its own, the mod will not create a config file.
 To change settings, you can install [Fzzy Config](https://modrinth.com/mod/fzzy-config).
+
+To load changes to the config file, you can use the vanilla ``/reload`` command.
 
 ```toml
 # Whether all golems should try to put a disc into a jukebox.
