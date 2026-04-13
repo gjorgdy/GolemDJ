@@ -33,18 +33,18 @@ import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 public abstract class TransportItemsBetweenContainersMixin {
 
     @Shadow
-    protected abstract int getHorizontalSearchDistance(PathfinderMob entity);
+    protected abstract int getHorizontalSearchDistance(PathfinderMob mob);
 
     @Shadow
     @Nullable
     private TransportItemsBetweenContainers.TransportItemTarget target;
 
     @Inject(method = "getTransportTarget", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"), cancellable = true)
-    public void onFindStorage(ServerLevel world, PathfinderMob pathfinderMob, CallbackInfoReturnable<Optional<TransportItemsBetweenContainers.TransportItemTarget>> cir) {
-        var isDj = EntityUtils.isDj(pathfinderMob);
+    public void onFindStorage(ServerLevel level, PathfinderMob body, CallbackInfoReturnable<Optional<TransportItemsBetweenContainers.TransportItemTarget>> cir) {
+        var isDj = EntityUtils.isDj(body);
         if (!(GolemDiscJockey.shouldUseJukebox || isDj)) return;
-        if (pathfinderMob instanceof CopperGolem copperGolem && ItemUtils.isMusicDisc(copperGolem.getMainHandItem())) {
-            var optJukebox = this.findJukebox(world, copperGolem);
+        if (body instanceof CopperGolem copperGolem && ItemUtils.isMusicDisc(copperGolem.getMainHandItem())) {
+            var optJukebox = this.findJukebox(level, copperGolem);
             if (optJukebox.isPresent()) {
                 cir.setReturnValue(optJukebox);
                 cir.cancel();
@@ -58,41 +58,41 @@ public abstract class TransportItemsBetweenContainersMixin {
     }
 
     @WrapOperation(method = "pickUpItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/behavior/TransportItemsBetweenContainers;pickupItemFromContainer(Lnet/minecraft/world/Container;)Lnet/minecraft/world/item/ItemStack;"))
-    private static ItemStack onPickupItem(Container container, Operation<ItemStack> original, @Local(argsOnly = true) PathfinderMob pathfinderMob) {
+    private static ItemStack onPickupItem(Container container, Operation<ItemStack> original, @Local(argsOnly = true, name = "body") PathfinderMob body) {
         // to prevent an edge case where the golems target is still a jukebox, so it takes the disc out
         if (container instanceof JukeboxBlockEntity) {
             return ItemStack.EMPTY;
         }
-        if (EntityUtils.isDj(pathfinderMob)) {
+        if (EntityUtils.isDj(body)) {
             return ContainerUtils.pickupDiscFromContainer(container);
         }
         return original.call(container);
     }
 
     @Inject(method = "hasValidTarget", at = @At("TAIL"), cancellable = true)
-    public void hasValidStorage(Level world, PathfinderMob entity, CallbackInfoReturnable<Boolean> cir) {
+    public void hasValidStorage(Level level, PathfinderMob body, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(
             cir.getReturnValue() || (this.target != null && this.target.blockEntity() instanceof JukeboxBlockEntity)
         );
     }
 
     @WrapMethod(method = "doReachedTargetInteraction")
-    private void onReachedTargetInteraction(PathfinderMob pathfinderMob, Container container, BiConsumer<PathfinderMob, Container> biConsumer, BiConsumer<PathfinderMob, Container> biConsumer2, BiConsumer<PathfinderMob, Container> biConsumer3, BiConsumer<PathfinderMob, Container> biConsumer4, Operation<Void> original) {
-        if ((GolemDiscJockey.shouldWaitAtJukebox || EntityUtils.isDj(pathfinderMob))
+    private void onReachedTargetInteraction(PathfinderMob body, Container container, BiConsumer<PathfinderMob, Container> onPickupSuccess, BiConsumer<PathfinderMob, Container> onPickupFailure, BiConsumer<PathfinderMob, Container> onPlaceSuccess, BiConsumer<PathfinderMob, Container> onPlaceFailure, Operation<Void> original) {
+        if ((GolemDiscJockey.shouldWaitAtJukebox || EntityUtils.isDj(body))
                 && target != null && target.blockEntity() instanceof JukeboxBlockEntity jukeboxBlockEntity
                 && jukeboxBlockEntity.getTheItem() != ItemStack.EMPTY
-                && pathfinderMob.level().random.nextIntBetweenInclusive(0,4) % 4 != 0
+                && body.level().getRandom().nextIntBetweenInclusive(0, 4) % 4 != 0
         ) {
             // If the target is a jukebox with a disc in it, sometimes do the interaction.
             return;
         }
-        original.call(pathfinderMob, container, biConsumer, biConsumer2, biConsumer3, biConsumer4);
+        original.call(body, container, onPickupSuccess, onPickupFailure, onPlaceSuccess, onPlaceFailure);
     }
 
     @WrapOperation(method = "putDownItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/behavior/TransportItemsBetweenContainers;addItemsToContainer(Lnet/minecraft/world/entity/PathfinderMob;Lnet/minecraft/world/Container;)Lnet/minecraft/world/item/ItemStack;"))
-    private ItemStack onSetStack(PathfinderMob pathfinderMob, Container container, Operation<ItemStack> original) {
+    private ItemStack onSetStack(PathfinderMob body, Container container, Operation<ItemStack> original) {
         if (container instanceof JukeboxBlockEntity jukeboxBlockEntity) {
-            var golemItem = pathfinderMob.getMainHandItem();
+            var golemItem = body.getMainHandItem();
             if (jukeboxBlockEntity.getTheItem() == ItemStack.EMPTY) {
                 var jukeboxItem = jukeboxBlockEntity.getItem(0);
                 if (jukeboxItem.isEmpty()) {
@@ -101,15 +101,15 @@ public abstract class TransportItemsBetweenContainersMixin {
             }
             return golemItem;
         }
-        return original.call(pathfinderMob, container);
+        return original.call(body, container);
     }
 
     @Unique
     private Optional<TransportItemsBetweenContainers.TransportItemTarget> findJukebox(ServerLevel world, CopperGolem entity) {
-        Stream<ChunkPos> chunkPosStream = ChunkPos.rangeClosed(new ChunkPos(entity.blockPosition()), Math.floorDiv(this.getHorizontalSearchDistance(entity), 16) + 1);
+        Stream<ChunkPos> chunkPosStream = ChunkPos.rangeClosed(ChunkPos.containing(entity.blockPosition()), Math.floorDiv(this.getHorizontalSearchDistance(entity), 16) + 1);
         // Find the nearest empty jukebox
         var jukebox = chunkPosStream
-                .map(chunkPos -> world.getChunkSource().getChunkNow(chunkPos.x, chunkPos.z))
+                .map(chunkPos -> world.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z()))
                 .filter(Objects::nonNull)
                 .flatMap(worldChunk -> worldChunk.getBlockEntities().values().stream())
                 .filter(blockEntity -> blockEntity instanceof JukeboxBlockEntity jbe && (jbe.isEmpty() || GolemDiscJockey.shouldWaitAtJukebox || EntityUtils.isDj(entity)))
