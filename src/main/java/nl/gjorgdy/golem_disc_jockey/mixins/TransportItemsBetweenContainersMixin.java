@@ -4,6 +4,9 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import nl.gjorgdy.golem_disc_jockey.GolemDiscJockey;
 import nl.gjorgdy.golem_disc_jockey.utils.ContainerUtils;
 import nl.gjorgdy.golem_disc_jockey.utils.ItemUtils;
@@ -39,6 +42,19 @@ public abstract class TransportItemsBetweenContainersMixin {
     @Nullable
     private TransportItemsBetweenContainers.TransportItemTarget target;
 
+    @Shadow
+    protected abstract boolean isPositionAlreadyVisited(Set<GlobalPos> visitedPositions, Set<GlobalPos> unreachablePositions, TransportItemsBetweenContainers.TransportItemTarget target, Level level);
+
+    @Shadow
+    private static Set<GlobalPos> getVisitedPositions(PathfinderMob mob) {
+        throw new UnsupportedOperationException("Implemented via mixin");
+    }
+
+    @Shadow
+    private static Set<GlobalPos> getUnreachablePositions(PathfinderMob mob) {
+        throw new UnsupportedOperationException("Implemented via mixin");
+    }
+
     @Inject(method = "getTransportTarget", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"), cancellable = true)
     public void onFindStorage(ServerLevel level, PathfinderMob body, CallbackInfoReturnable<Optional<TransportItemsBetweenContainers.TransportItemTarget>> cir) {
         var isDj = EntityUtils.isDj(body);
@@ -69,11 +85,10 @@ public abstract class TransportItemsBetweenContainersMixin {
         return original.call(container);
     }
 
-    @Inject(method = "hasValidTarget", at = @At("TAIL"), cancellable = true)
-    public void hasValidStorage(Level level, PathfinderMob body, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(
-            cir.getReturnValue() || (this.target != null && this.target.blockEntity() instanceof JukeboxBlockEntity)
-        );
+    @WrapMethod(method = "isWantedBlock")
+    public boolean isWantedBlock(PathfinderMob mob, BlockState block, Operation<Boolean> original) {
+        if (block.is(Blocks.JUKEBOX) && mob instanceof CopperGolem) return true;
+        return original.call(mob, block);
     }
 
     @WrapMethod(method = "doReachedTargetInteraction")
@@ -105,23 +120,25 @@ public abstract class TransportItemsBetweenContainersMixin {
     }
 
     @Unique
-    private Optional<TransportItemsBetweenContainers.TransportItemTarget> findJukebox(ServerLevel world, CopperGolem entity) {
+    private Optional<TransportItemsBetweenContainers.TransportItemTarget> findJukebox(ServerLevel level, CopperGolem entity) {
         Stream<ChunkPos> chunkPosStream = ChunkPos.rangeClosed(ChunkPos.containing(entity.blockPosition()), Math.floorDiv(this.getHorizontalSearchDistance(entity), 16) + 1);
         // Find the nearest empty jukebox
-        var jukebox = chunkPosStream
-                .map(chunkPos -> world.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z()))
+        boolean golemShouldWait = shouldWaitAtJukebox(entity);
+        var visitedPositions = getVisitedPositions(entity);
+        var unreachablePositions = getUnreachablePositions(entity);
+        return chunkPosStream
+                .map(chunkPos -> level.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z()))
                 .filter(Objects::nonNull)
                 .flatMap(worldChunk -> worldChunk.getBlockEntities().values().stream())
-                .filter(blockEntity -> blockEntity instanceof JukeboxBlockEntity jbe && (jbe.isEmpty() || GolemDiscJockey.shouldWaitAtJukebox || EntityUtils.isDj(entity)))
-                .min(Comparator.comparingDouble(a -> a.getBlockPos().distSqr(entity.blockPosition())));
-        // If found, return the storage
-        if (jukebox.isPresent() && jukebox.get() instanceof JukeboxBlockEntity jukeboxBlockEntity) {
-            return Optional.of(
-                new TransportItemsBetweenContainers.TransportItemTarget(jukeboxBlockEntity.getBlockPos(), jukeboxBlockEntity, jukeboxBlockEntity, jukeboxBlockEntity.getBlockState())
-            );
-        }
-        // Otherwise return empty
-        return Optional.empty();
+                .filter(blockEntity -> blockEntity instanceof JukeboxBlockEntity jbe && (jbe.isEmpty() || golemShouldWait))
+                .map(jukeboxBlockEntity -> new TransportItemsBetweenContainers.TransportItemTarget(jukeboxBlockEntity.getBlockPos(), (JukeboxBlockEntity) jukeboxBlockEntity, jukeboxBlockEntity, jukeboxBlockEntity.getBlockState()))
+                .filter(tit -> !this.isPositionAlreadyVisited(visitedPositions, unreachablePositions, tit, level) || golemShouldWait)
+                .min(Comparator.comparingDouble(a -> a.blockEntity().getBlockPos().distSqr(entity.blockPosition())));
+    }
+
+    @Unique
+    private boolean shouldWaitAtJukebox(CopperGolem entity) {
+        return GolemDiscJockey.shouldWaitAtJukebox || EntityUtils.isDj(entity);
     }
 
 }

@@ -1,4 +1,4 @@
-﻿Tiny Takeover for a tiny golem
+﻿Navigational Issues
 ---
 
-- Updated to 26.1.2
+- Fixed a bug where a golem would always target a jukebox, even if it could not reach it.
