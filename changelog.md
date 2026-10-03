@@ -1,4 +1,4 @@
-﻿Navigational Issues
+﻿Golem Cubed
 ---
 
-- Fixed a bug where a golem would always target a jukebox, even if it could not reach it.
+- Updated the mod to 26.2: Chaos Cubed
