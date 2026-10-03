@@ -1,4 +1,4 @@
-﻿Golem Cubed
+﻿Golem Bound
 ---
 
-- Updated the mod to 26.2: Chaos Cubed
+- Updated the mod to 26.3
